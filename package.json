@@ -10,7 +10,7 @@
   "scripts": {
     "test": "mocha --compilers js:babel-register ./spec/*.js",
     "parse:oo": "babel-node bin/parse --paradigm oo",
-    "parse:functional": "babel-node babel-node bin/parse --paradigm functional",
+    "parse:functional": "babel-node bin/parse --paradigm functional",
     "parse:imperative": "babel-node bin/parse --paradigm imperative"
   },
   "dependencies": {

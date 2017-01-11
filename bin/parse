@@ -2,6 +2,7 @@
 
 const fs = require('fs')
 const parseArgs = require('minimist')
+import ooParser from '../lib-object-oriented/parser'
 
 const args = parseArgs(process.argv.slice(2))
 const fileName = args._[0]
@@ -13,7 +14,8 @@ if (!fileName) {
 
 switch (args.paradigm) {
   case 'oo':
-    // load and use object oriented parser
+    const insaneParser = new ooParser( fileContents )
+    insaneParser.parse()
     break
   case 'functional':
     // load and use functional parser
