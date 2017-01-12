@@ -15,7 +15,7 @@ if (!fileName) {
 switch (args.paradigm) {
   case 'oo':
     const insaneParser = new ooParser( fileContents )
-    insaneParser.parse()
+    console.log( insaneParser.parse() )
     break
   case 'functional':
     // load and use functional parser

@@ -36,7 +36,7 @@ describe('heading', () => {
     })
 
     it('wraps a line beginning in ###### in an h6 tag', () => {
-      expect( parsedLines[5] )
+      expect( parsedLines[6] )
         .to.equal('<h6>i love giraffes</h6>')
     })
   })
