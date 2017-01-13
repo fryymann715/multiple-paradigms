@@ -1,8 +1,8 @@
 import chai, { expect } from 'chai'
-
-const fs = require('fs')
-const blockQuote = fs.readFileSync('src/blockQuote.md', 'utf8')
+import fs from 'fs'
 import ooParser from '../lib-object-oriented/parser'
+
+const blockQuote = fs.readFileSync('src/blockQuote.md', 'utf8')
 
 describe('blockQuote', () => {
 

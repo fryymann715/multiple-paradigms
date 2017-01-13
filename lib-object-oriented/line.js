@@ -6,12 +6,26 @@ export default class Line {
     this.tokensArray = tokensArray
     this.tagType = type
     this.symbolCount = 0
+    this.output = ''
   }
 
   isNotCodeBlock = () => {
     return this.tagType !== tokenVars.TICK ||
       ( this.tagType === tokenVars.TICK &&
       this.symbolCount === 1 )
+  }
+
+  shouldSkip = ( index, currentToken ) => {
+    if (( this.tagType === tokenVars.HYPHEN ||
+        this.tagType === tokenVars.ASTERISK ) &&
+        index === 1 &&
+        currentToken.type === tokenVars.SPACE ) {
+      return true
+    } else if ( this.tagType === tokenVars.NUMB &&
+      index <= 2 ) {
+        return true
+      }
+
   }
 
   newLinesToSpaces = () => {
@@ -25,6 +39,13 @@ export default class Line {
       }
     }
   }
+
+  createTag = variety =>
+    new Tag({
+      tagType: this.tagType,
+      variety: variety,
+      symbolCount: this.symbolCount
+    }).deliverHTMLTag()
 
   findNewLine = element => element.type === tokenVars.NEW_LINE
 
@@ -43,26 +64,23 @@ export default class Line {
   }
 
   parse = () => {
-
     this.getSymbolCount()
     this.newLinesToSpaces()
-
-    let output = ''
 
     for ( let index = 0; index < this.tokensArray.length; index++ ) {
       const currentToken = this.tokensArray[ index ]
 
       if ( currentToken.isMarkdown() ) {
-        if ( index === 0 ) { this.tagType = currentToken.type }
-
-        if ( currentToken.isInsideCodeBlock( this.tagType ) ) {
-          output += currentToken.value
-        }
-        if ( currentToken === tokenVars.TICK ) {
-          continue
+        if ( index === 0 ) {
+          this.tagType = currentToken.type
+        } else if ( currentToken.shouldNotBeRemoved( this.tagType ) ) {
+          this.output += currentToken.value
         }
       } else {
-        output += currentToken.value
+        if ( this.shouldSkip( index, currentToken ) ) {
+          continue
+        }
+        this.output += currentToken.value
       }
     }
 
@@ -70,18 +88,10 @@ export default class Line {
       this.tagType = 'p'
     }
 
-    output = new Tag({
-      tagType: this.tagType,
-      variety: 'opening',
-      symbolCount: this.symbolCount
-    }).deliverHTMLTag() + output
+    this.output = this.createTag( 'opening' ) +
+      this.output +
+      this.createTag( 'closing' )
 
-    output += new Tag({
-      tagType: this.tagType,
-      variety: 'closing',
-      symbolCount: this.symbolCount
-    }).deliverHTMLTag()
-
-    return output
+    return this.output
   }
 }

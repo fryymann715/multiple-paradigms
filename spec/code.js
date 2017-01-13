@@ -1,8 +1,8 @@
 import chai, { expect } from 'chai'
-
-const fs = require('fs')
-const codeBlock = fs.readFileSync('src/code.md', 'utf8')
+import fs from 'fs'
 import ooParser from '../lib-object-oriented/parser'
+
+const codeBlock = fs.readFileSync('src/code.md', 'utf8')
 
 describe('code', () => {
 

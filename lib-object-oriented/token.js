@@ -60,13 +60,19 @@ export default class Token {
       ARROW +
       TICK +
       ASTERISK +
+      HYPHEN +
       '])', 'g')
 
     return this.type.search( typeMatch ) !== -1
   }
 
-  isInsideCodeBlock = ( tagType ) =>
-    tagType === TICK && this.type !== TICK
+  shouldNotBeRemoved = ( tagType ) => {
+    if ( tagType === TICK ) {
+      return this.type !== TICK
+    } else if ( tagType === HYPHEN || tagType === ASTERISK ) {
+      return this.type !== HYPHEN || this.type !== ASTERISK
+    }
+  }
 
   isPartOfMarkdownLabel = ( tagType, index, symbolCount ) => {
     return tagType === this.type && index <= symbolCount
