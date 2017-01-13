@@ -1,9 +1,8 @@
 import chai, { expect } from 'chai'
-
-const fs = require('fs')
+import fs from 'fs'
+import ooParser from '../lib-object-oriented/parser'
 
 const paragraph = fs.readFileSync('src/paragraph.md', 'utf8')
-import ooParser from '../lib-object-oriented/parser'
 
 describe('paragraph', () => {
 
@@ -26,7 +25,6 @@ describe('paragraph', () => {
     it('creates a paragraph line after a non paragraph line', () => {
       expect(parsedLines[4]).to.equal('<p>Heck yes, you will</p>')
     })
-
 
   })
 
