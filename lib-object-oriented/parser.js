@@ -1,5 +1,6 @@
 import Lexer from './lexer'
 import Line from './line'
+import MultiLine from './MultiLine'
 import * as tokenVars from './token'
 
 export default class Parser {
@@ -7,6 +8,7 @@ export default class Parser {
     this.fileContent = fileContent
     this.tokens = []
     this.listLineStorage = []
+    this.listType = null
     this.lineStartIndex = 0
     this.beginningToken = null
     this.currentToken = null
@@ -14,6 +16,7 @@ export default class Parser {
     this.nextToken = null
     this.afterBeginningToken = null
     this.outputHTML = ''
+    this.tagType = null
   }
 
   getTokens() {
@@ -29,16 +32,50 @@ export default class Parser {
     this.afterBeginningToken = this.tokens[ this.lineStartIndex + 1 ]
   }
 
-  isLineHeading = () => this.beginningToken.type === tokenVars.OCTOTHORP &&
-    this.currentToken.type === tokenVars.NEW_LINE
-
   isBlankLine = () => this.beginningToken.type === tokenVars.NEW_LINE
 
-  isListItem = () =>
-    ( this.beginningToken.type === ( tokenVars.ASTERISK ) ||
-      this.beginningToken.type === ( tokenVars.HYPHEN )) &&
-    this.currentToken.type === tokenVars.NEW_LINE &&
-    this.afterBeginningToken.type === tokenVars.SPACE
+  setListType = type => {
+    if ( this.isValidListType( type ) ) {
+      if ( this.listType === null ) {
+        this.listType = type
+      }
+    }
+  }
+
+  isValidListType = ( type ) => {
+    if ( type === tokenVars.NUMB ||
+        type === tokenVars.ASTERISK ||
+        type === tokenVars.HYPHEN ) {
+      return true
+    }
+  }
+
+  isListItem = type => {
+    this.setListType( type )
+    if ( this.beginningToken.type === tokenVars.NUMB &&
+      this.currentToken.type === tokenVars.NEW_LINE &&
+      this.afterBeginningToken.type === tokenVars.DOT ) {
+      return true
+    } else {
+      return (
+        ( this.beginningToken.type === tokenVars.ASTERISK ||
+          this.beginningToken.type === tokenVars.HYPHEN ) &&
+          this.currentToken.type === tokenVars.NEW_LINE &&
+          this.afterBeginningToken.type === tokenVars.SPACE
+        )
+    }
+  }
+
+  addListToOutput = () => {
+    this.addToOutput( this.createMultiLine() )
+    this.listType = null
+    this.listLineStorage = []
+  }
+
+  isListFinished = () =>
+    this.nextToken.type !== tokenVars.ASTERISK &&
+    this.nextToken.type !== tokenVars.HYPHEN &&
+    this.nextToken.type !== tokenVars.NUMB
 
   isMultilineCodeBlock = () =>
     this.currentToken.type === tokenVars.NEW_LINE &&
@@ -46,13 +83,28 @@ export default class Parser {
     this.beginningToken.type === this.previousToken.type &&
     this.beginningToken.type !== tokenVars.CHAR
 
-  lineEndsAtBlankLineOrHeader = () =>
+  endsAtNewLine = () =>
+    ( this.isNormalAssLine() && this.confirmNotListItem() ) ||
+    this.isMultilineCodeBlock() ||
+    this.isLineHeading() ||
+    this.startsWithInlineStyling()
+
+  isNormalAssLine = () =>
     this.currentToken.type === tokenVars.NEW_LINE &&
     ( this.nextToken.type === tokenVars.NEW_LINE ||
-      this.nextToken.type === null ||
-      this.nextToken.type === tokenVars.OCTOTHORP ) &&
-    this.beginningToken.type !== ( tokenVars.ASTERISK ) &&
-    this.beginningToken.type !== ( tokenVars.HYPHEN )
+    this.nextToken.type === null ||
+    this.nextToken.type === tokenVars.OCTOTHORP )
+
+  isLineHeading = () => this.beginningToken.type === tokenVars.OCTOTHORP &&
+    this.currentToken.type === tokenVars.NEW_LINE
+
+  startsWithInlineStyling = () =>
+    this.isNormalAssLine() && this.beginningToken.type === this.afterBeginningToken.type
+
+  confirmNotListItem = () =>
+    this.beginningToken.type !== tokenVars.ASTERISK &&
+    this.beginningToken.type !== tokenVars.HYPHEN &&
+    this.beginningToken.type !== tokenVars.NUMB
 
   createLine = index =>
     new Line ({
@@ -60,7 +112,10 @@ export default class Parser {
       type: this.beginningToken.type
     }).parse()
 
-  addLineToOutput = line => this.outputHTML += line += '\n'
+  createMultiLine = () =>
+    new MultiLine ( this.listLineStorage, this.listType ).deliverHTML()
+
+  addToOutput = line => this.outputHTML += line += '\n'
 
   startNewLine = index => {
     this.lineStartIndex = index + 1
@@ -73,20 +128,17 @@ export default class Parser {
     for ( let index = 0; index < this.tokens.length; index++ ) {
       this.setLocatorTokens( index )
 
-      if ( this.isLineHeading() ) {
-        this.addLineToOutput( this.createLine( index ) )
+      if ( this.isBlankLine() ) {
         this.startNewLine( index )
-      } else if ( this.isBlankLine() ) {
+      } else if ( this.endsAtNewLine() ) {
+        this.addToOutput( this.createLine( index ) )
         this.startNewLine( index )
-      } else if ( this.lineEndsAtBlankLineOrHeader() ) {
-        this.addLineToOutput( this.createLine( index ) )
-        this.startNewLine( index )
-      } else if ( this.isMultilineCodeBlock() ) {
-        this.addLineToOutput( this.createLine( index ) )
-        this.startNewLine( index )
-      } else if ( this.isListItem() ) {
+      } else if ( this.isListItem( this.currentToken.type ) ) {
         this.listLineStorage.push( this.createLine( index ) )
         this.startNewLine( index )
+          if ( this.isListFinished() ) {
+            this.addListToOutput()
+          }
       }
     }
     return this.outputHTML

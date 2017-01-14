@@ -3,7 +3,7 @@
 `var x = 0
 var y = i + x`
 
-`const mom = () => { console.log('cows') }`
+`const mom = () => { ${console.log('cows')} }`
 
 ```
 console.log('go to sleep')

@@ -55,21 +55,32 @@ export default class Token {
   }
 
   isMarkdown = () => {
-    const typeMatch = new RegExp('([' +
-      OCTOTHORP +
-      ARROW +
-      TICK +
-      ASTERISK +
-      '])', 'g')
+    const typeMatch = new RegExp('([\\' +
+      OCTOTHORP + '\\' +
+      ARROW + '\\' +
+      TICK + '\\' +
+      ASTERISK + '\\' +
+      HYPHEN + '\\' +
+      UNDERSCORE + '\\' +
+      '\\])', 'g')
 
     return this.type.search( typeMatch ) !== -1
   }
 
-  isInsideCodeBlock = ( tagType ) =>
+  isPartOflist = tagType =>
+    ( tagType === HYPHEN || tagType === ASTERISK ) &&
+    ( this.type !== HYPHEN || this.type !== ASTERISK )
+
+  isPartOfCodeBlock = tagType =>
     tagType === TICK && this.type !== TICK
 
-  isPartOfMarkdownLabel = ( tagType, index, symbolCount ) => {
-    return tagType === this.type && index <= symbolCount
+  shouldNotBeRemoved = tagType => {
+    if ( this.isPartOfCodeBlock( tagType ) || this.isPartOflist( tagType ) ) {
+      return true
+    }
   }
+
+  isPartOfMarkdownLabel = ( tagType, index, symbolCount ) =>
+    tagType === this.type && index <= symbolCount
 
 }

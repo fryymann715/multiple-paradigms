@@ -1,8 +1,8 @@
 import chai, { expect } from 'chai'
-
-const fs = require('fs')
-const h1 = fs.readFileSync('src/heading.md', 'utf8')
+import fs from 'fs'
 import ooParser from '../lib-object-oriented/parser'
+
+const h1 = fs.readFileSync('src/heading.md', 'utf8')
 
 describe('heading', () => {
 

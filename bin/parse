@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const fs = require('fs')
+import fs from 'fs'
 const parseArgs = require('minimist')
 import ooParser from '../lib-object-oriented/parser'
 
